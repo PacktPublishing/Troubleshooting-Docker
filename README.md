@@ -20,7 +20,7 @@ sections of the chapters.
 
 ### Related Books
 
-* [Learning Docker Second Edition](https://www.packtpub.com/networking-and-servers/learning-docker-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781786462923)
+* [Learning Docker - Second Edition](https://www.packtpub.com/networking-and-servers/learning-docker-second-edition?utm_source=github&utm_medium=repository&utm_campaign=9781786462923)
 
 * [Developing Docker](https://www.packtpub.com/virtualization-and-cloud/developing-docker?utm_source=github&utm_medium=repository&utm_campaign=9781786469908)
 
