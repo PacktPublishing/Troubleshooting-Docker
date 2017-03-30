@@ -1,0 +1,48 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\fs19 \cf0 FROM debian:wheezy
+\fs16 \
+
+\fs19 RUN apt-get update
+\fs16 \
+
+\fs19 RUN apt-get -y install ruby ruby-dev build-essential git
+\fs16 \
+
+\fs19  # For debugging
+\fs16 \
+
+\fs19  RUN apt-get install -y gdb strace
+\fs16 \
+
+\fs19  # Set up my user
+\fs16 \
+
+\fs19  RUN useradd vkohli -u 1000 -s /bin/bash --no-create-home
+\fs16 \
+
+\fs19  RUN gem install -n /usr/bin bundler
+\fs16 \
+
+\fs19  RUN gem install -n /usr/bin rake
+\fs16 \
+
+\fs19  WORKDIR /home/vkohli/
+\fs16 \
+
+\fs19  ENV HOME /home/vkohli
+\fs16 \
+
+\fs19  VOLUME ["/home"]
+\fs16 \
+
+\fs19  USER vkohli
+\fs16 \
+
+\fs19  EXPOSE 8080\
+}

@@ -1,0 +1,23 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+
+\f0\fs19 \cf0 # tasks file for ansible-dockerized-wordpress\
+- name: "Launching DB container"\
+\'a0docker:\
+\'a0\'a0\'a0name: db\
+\'a0\'a0\'a0image: mariadb\
+\'a0\'a0\'a0env:\
+\'a0\'a0\'a0\'a0\'a0MYSQL_ROOT_PASSWORD: esample\
+- name: "Launching wordpress container"\
+\'a0docker:\
+\'a0\'a0\'a0name: wordpress\
+\'a0\'a0\'a0image: wordpress\
+\'a0\'a0\'a0links:\
+\'a0\'a0\'a0- db:mysql\
+\'a0\'a0\'a0ports:\
+\'a0\'a0\'a0- 8081:80\
+}

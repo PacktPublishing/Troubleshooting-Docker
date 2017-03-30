@@ -1,0 +1,108 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 ArialMT;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww28300\viewh15280\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs28 \cf0 Shell Commands:\
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1 \cf0 Docker Public Repository (Docker Hub) 
+\b0\fs19 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ docker search centos\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+
+\f0 \cf0 $ sudo docker login\
+$ docker logout\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f1\b\fs32 \cf0 Push Image to Docker Hub\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\b0\fs19 \cf0 Dockerfile_1\
+$ docker build \'96t test/cowsay-dockerfile .\
+$ docker images\uc0\u8232 $ docker tag c1014a025b02 username/cowsay-dockerfile\u8232 $ sudo docker push username/cowsay-dockerfile\
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1\b\fs28 \cf0 Install Private Local Docker Registry\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\b0\fs19 \cf0 \
+$ docker run -p 5000:5000 registry\
+$ docker tag username/cowsay-dockerfile localhost:5000/cowsay-dockerfile\
+\
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1\b\fs28 \cf0 Moving Images in Between host\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\b0\fs19 \cf0 $ docker pull Ubuntu\
+$ docker run -t -i ubuntu /bin/bash\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f1\fs20 \cf0 $ \'a0docker ps\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\fs19 \cf0 $ docker export grdc | gzip > ubuntu.tar.gz\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f1\fs20 \cf0 $ gunzip -c ubuntu.tar.gz | docker import - ubuntu-sample\
+$ docker images\
+$ docker run -i -t ubuntu-sample /bin/bash\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\fs19 \cf0 $ docker save ubuntu | gzip > ubuntu-bundle.tar.gz\
+$ gunzip -c ubuntu-bundle.tar.gz | docker load\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f1\fs20 \cf0 $ docker run -i -t ubuntu /bin/bash\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 \
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\b\fs28 \cf0 Ensuring integrity of Images \'96 Signed Images
+\b0\fs20 \
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\fs19 \cf0 $ sudo apt install notary\
+$ git clone https://github.com/docker/notary.git\
+$ docker-compose build\
+$ docker-compose up -d\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f1\fs20 \cf0 $ docker images\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\fs19 \cf0 $ docker tag test/cowsay-dockerfile username/cowsay-dockerfile\
+$ docker push username/cowsay-dockerfile:latest\
+$ notary -s https://notary.docker.io -d ~/.docker/trust list docker.io/vkohli/cowsay-dockerfile:latest\
+$ docker push vkohli/cowsay-dockerfile:latest\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+
+\f1\fs20 \cf0       $ notary -s {\field{\*\fldinst{HYPERLINK "https://notary.docker.io"}}{\fldrslt https://notary.docker.io}} -d ~/.docker/trust list docker.io/vkohli/cowsay-dockerfile:latest\
+\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\b\fs32 \cf0 Docker Trusted Registry
+\b0\fs20 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ docker-machine create -d virtualbox --virtualbox-memory "2000" --virtualbox-disk-size "5000" node1\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+
+\f0\fs19 \cf0 $ docker-machine create -d virtualbox --virtualbox-memory "2000" node2\
+$ docker-machine env node1\
+$ eval $(docker-machine env node1)\
+$ docker-machine ls\
+$ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --name ucp docker/ucp install -i --swarm-port 3376 --host-address $(docker-machine ip node1)\uc0\u8232 $ docker-machine env node2\
+$ eval $(docker-machine env node2)\
+$ docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock --name ucp docker/ucp join -i --host-address $(docker-machine ip node2)\
+$ curl -k https://192.168.99.101:443/ca > ucp-ca.pem\
+$ docker run -it --rm docker/dtr install --ucp-url https://192.168.99.101:443/ --ucp-node node2 --dtr-load-balancer 192.168.99.102 --ucp-username admin --ucp-password 123456 --ucp-ca "$(cat ucp-ca.pem)"\
+\
+\uc0\u8232 \
+\
+\uc0\u8232 \
+\
+\
+}

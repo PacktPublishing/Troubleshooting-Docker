@@ -1,0 +1,16 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+
+\f0\fs19 \cf0 ## Nginx Containers build\
+# Set nginx base image\
+FROM nginx\
+\
+# File Author / Maintainer\
+MAINTAINER John Wooten @CONSULTED <jwooten@cloudconsulted.com>\
+\
+# Copy custom configuration file from the current directory\
+COPY nginx.conf /etc/nginx/nginx.conf}

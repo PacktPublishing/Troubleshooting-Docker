@@ -1,0 +1,108 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 ArialMT;\f2\froman\fcharset0 TimesNewRomanPSMT;
+}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs28 \cf0 Shell Commands:\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f1\fs32 \cf0 Default Case storing data inside the Docker container
+\f0\b0\fs19 \
+$ docker run -it ubuntu:14.04\
+root@container-id:/# cd /tmp/\
+root@container-id:/tmp# cat > hello.txt\
+hii\
+root@container-id:/tmp# ls\
+hello.txt\
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1\b\fs28 \cf0 Creating data-volume container
+\f0\b0\fs19 \
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+\cf0 $ docker create -v /tmp --name ubuntuvolume Ubuntu:14.04\
+$ docker run -t -i --volumes-from ubuntuvolume ubuntu:14.04 /bin/bash\
+root@container-id:/# echo "testing data container" > /tmp/hello\
+root@container-id:/# exit\
+$ docker run -t -i --volumes-from ubuntuvolume ubuntu:14.04 /bin/bash\
+root@5dd8152155de:/# cd tmp/\
+root@5dd8152155de:/tmp# ls\
+hello\
+root@5dd8152155de:/tmp# cat hello\
+testing data container\
+$ mkdir serverlogs\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f2\fs24 \cf0 $ docker run -d -v /home/serverlogs:/var/log/nginx -p 5000:80 -i nginx\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f0\fs19 \cf0 $ cd serverlogs/\
+$ ls\
+$ cat access.log \
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 \
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1\b\fs28 \cf0 Flocker 
+\f0\b0\fs19 \
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 \
+$ export FLOCKER_CERTS_PATH=/etc/flocker\
+$ export FLOCKER_USER=user1\
+$ export FLOCKER_CONTROL_SERVICE=<ControlNodeIP> # not ClientNodeIP!\
+$ export DOCKER_TLS_VERIFY=1\
+$ export DOCKER_HOST=tcp://<ControlNodeIP>:2376\
+$ flockerctl status # should list two servers (nodes) running\
+$ flockerctl ls # should display no datasets yet\
+\pard\pardeftab720\li360\ri0\sa120\partightenfactor0
+\cf0 $ docker info |grep Nodes # should output "Nodes: 2"\
+$ docker run --volume-driver flocker -v flocker-volume:/cont-dir --name=testing-container\
+$ flocker-deploy control-service flocker-deploy.yml docker-compose.yml\
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1\b\fs28 \cf0 Convoy Docker Volume plugin
+\f0\b0\fs19 \
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 $ wget https://github.com/rancher/convoy/releases/download/v0.5.0/convoy.tar.gz\
+$ tar xvf convoy.tar.gz\
+$ sudo cp convoy/convoy convoy/convoy-pdata_tools /usr/local/bin/\
+$ sudo mkdir -p /etc/docker/plugins/\
+\pard\pardeftab720\li360\ri0\sa120\partightenfactor0
+\cf0 $ sudo bash -c 'echo "unix:///var/run/convoy/convoy.sock" > /etc/docker/plugins/convoy.spec'\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 $ truncate -s 100G data.vol\
+$ truncate -s 1G metadata.vol\
+$ sudo losetup /dev/loop5 data.vol\
+\pard\pardeftab720\li360\ri0\sa120\partightenfactor0
+\cf0 $ sudo losetup /dev/loop6 metadata.vol\
+$ sudo convoy daemon --drivers devicemapper --driver-opts dm.datadev=/dev/loop5 --driver-opts dm.metadatadev=/dev/loop6\
+\
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 $ sudo docker run -it -v test_volume:/sample --volume-driver=convoy busybox\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardeftab720\ri0\partightenfactor0
+
+\f2\fs22 \cf0 \
+\pard\pardeftab720\li360\ri0\sa120\partightenfactor0
+
+\f0\fs19 \cf0 $ sudo docker run -it -v test_volume:/sample --volume-driver=convoy --name=new-container busybox \
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 $ docker run --name wordpressdb --volume-driver=convoy -v test_volume:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=wordpress -d mysql:5.7\
+\
+$ docker run -e WORDPRESS_DB_PASSWORD=password -d --name wordpress --link wordpressdb:mysql  Wordpress\
+\
+\pard\pardeftab720\ri0\sb320\sa60\partightenfactor0
+
+\f1\b\fs28 \cf0 How device-mapper is used by Docker
+\f0\b0\fs19 \
+\pard\pardeftab720\li360\ri0\sa120\partightenfactor0
+\cf0 \
+$ dockerd --storage-driver=devicemapper &\
+\
+\
+\
+\pard\pardeftab720\ri0\partightenfactor0
+\cf0 \
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+\cf0 \
+}

@@ -1,0 +1,228 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1404\cocoasubrtf470
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;\f1\fswiss\fcharset0 ArialMT;}
+{\colortbl;\red255\green255\blue255;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\b\fs28 \cf0 Shell Commands:\
+\
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f1 \cf0 Kubernetes Deployment on Bare metal machine
+\f0\b0\fs19 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ yum -y install --enablerepo=updates-testing kubernetes\
+$ yum -y install etcd iptables-services\
+$ echo "192.168.121.9	fed-master\uc0\u8232 192.168.121.65	fed-node" >> /etc/hosts\
+$ systemctl disable iptables-services firewalld\uc0\u8232 $ systemctl stop iptables-services firewalld\
+\
+$ cat /etcd/kubernetes/config \
+\pard\pardeftab720\ri0\sa60\partightenfactor0
+\cf0 # Comma separated list of nodes in the etcd cluster\uc0\u8232 KUBE_MASTER="--master=http://fed-master:8080"\
+# logging to stderr means we get it in the systemd journal\uc0\u8232 KUBE_LOGTOSTDERR="--logtostderr=true"\
+# journal message level, 0 is debug\uc0\u8232 KUBE_LOG_LEVEL="--v=0"\
+# Should this cluster be allowed to run privileged docker containers\uc0\u8232 KUBE_ALLOW_PRIV="--allow-privileged=false"\
+\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ cat /etc/kubernetes/apiserver \
+# The address on the local server to listen to.\
+KUBE_API_ADDRESS="--address=0.0.0.0"\
+# Comma separated list of nodes in the etcd cluster\
+KUBE_ETCD_SERVERS="--etcd-servers=http://127.0.0.1:2379"\
+# Address range to use for services\
+KUBE_SERVICE_ADDRESSES="--service-cluster-ip-range=10.254.0.0/16"\
+# Add your own!\
+KUBE_API_ARGS=""\
+\
+$ cat /etc/etcd/etcd.conf \
+ETCD_LISTEN_CLIENT_URLS="http://0.0.0.0:2379"\
+\
+$ cat /etcd/kubernetes/kubelet\
+###\
+# Kubernetes kubelet (node) config\
+# The address for the info server to serve on (set to 0.0.0.0 or "" for all interfaces)\
+KUBELET_ADDRESS="--address=0.0.0.0"\
+# You may leave this blank to use the actual hostname\
+KUBELET_HOSTNAME="--hostname-override=fed-node"\
+# location of the api-server\
+KUBELET_API_SERVER="--api-servers=http://fed-master:8080"\
+# Add your own!\
+#KUBELET_ARGS=""\
+\
+$ cat start-k8s.sh\
+for SERVICES in etcd kube-apiserver kube-controller-manager kube-scheduler kube-proxy kubelet docker; do \
+\pard\pardeftab720\li360\ri0\sa50\partightenfactor0
+\cf0 systemctl restart $SERVICES\
+ systemctl enable $SERVICES\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 systemctl \
+$ kubectl create -f ./node.json\
+$ kubectl get nodes\
+\
+
+\f1\b\fs28 Troubleshooting the Kubernetes Fedora manual setup
+\f0\b0\fs19 \
+$ openssl genrsa -out /tmp/serviceaccount.key 2048\
+$ cat /etc/kubernetes/apiserver \
+KUBE_API_ARGS=\'94--service_account_key_file=/tmp/serviceaccount.key\'94\
+\
+$ cat /etc/kubernetes/kube-controller-manager \
+KUBE_CONTROLLER_MANAGER_ARGS=\'94 --\
+service_account_private_key_file=/tmp/serviceaccount.key "\
+\
+
+\f1\b\fs28 Kubernetes deployment using minikube
+\f0\b0\fs19 \
+$ curl -Lo minikube \uc0\u8232 $ chmod +x minikube\
+$ sudo mv minikube /usr/local/bin\
+$ curl -Lo kubectl https://storage.googleapis.com/kubernetes-release/release/v1.3.0/bin/darwin/amd64/kubectl && chmod +x kubectl && sudo mv kubectl /usr/local/bin/\
+$ minikube start\
+$ kubectl config use-context minikube\
+$ kubectl get nodes\
+$ kubectl run hello-minikube --image=gcr.io/google_containers/echoserver:1.4 --port=8080\
+$ kubectl expose deployment hello-minikube --type=NodePort\
+$  kubectl get pod\
+$ minikube dashboard\
+\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f1\b\fs32 \cf0 Kubernetes Deployment on AWS
+\f0\b0\fs19 \
+$ sudo pip install awscli\
+$ aws configure\
+$ aws iam create-instance-profile --instance-profile-name Kube\
+$ aws iam create-role --role-name Test-Role --assume-role-policy-document /root/kubernetes/Test-Role-Trust-Policy.json\
+$ aws iam add-role-to-instance-profile --role-name Test-Role --instance-profile-name Kube\
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+\cf0 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ export AWS_DEFAULT_PROFILE=Kube\
+\
+$ export KUBERNETES_PROVIDER=aws; wget -q -O - https://get.k8s.io | bash\
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+\cf0 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ config-default.sh \
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+\cf0 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 ZONE=$\{KUBE_AWS_ZONE:-us-west-2a\}\
+MASTER_SIZE=$\{MASTER_SIZE:-t2.micro\}\
+MINION_SIZE=$\{MINION_SIZE:-t2.micro\}\
+NUM_MINIONS=$\{NUM_MINIONS:-4\}\uc0\u8232 AWS_S3_REGION=$\{AWS_S3_REGION:-us-east-1\}\
+\
+
+\f1\b\fs28 Kubernetes Deployment on vSphere\
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+
+\f0\b0\fs19 \cf0 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ wget {\field{\*\fldinst{HYPERLINK "https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz"}}{\fldrslt \ul https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz}}\ul \
+\ulnone $ tar -C /usr/local -xzf go1.7.3.linux-amd64.tar.gz\
+$ go\
+$ export GOPATH=/usr/local/go\
+$ export PATH=$PATH:$GOPATH/bin\
+$ curl --remote-name-all \
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f1\b\fs32 \cf0 Kubernetes setup troubleshooting
+\f0\b0\fs19 \
+\pard\pardeftab720\ri0\sa60\partightenfactor0
+\cf0 $ cd kubernetes\
+\pard\pardeftab720\ri0\sa120\partightenfactor0
+\cf0 $ KUBERNETES_PROVIDER=vsphere cluster/kube-up.sh\
+\pard\pardeftab720\ri0\sa60\partightenfactor0
+\cf0 $ cd kubernetes\
+$ make release\
+\pard\pardeftab720\ri0\sa120\partightenfactor0
+\cf0 $ KUBERNETES_PROVIDER=vsphere cluster/kube-up.sh\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ cluster/kube-down.sh\
+\
+\pard\pardeftab720\ri0\sb400\sa60\partightenfactor0
+
+\f1\b\fs32 \cf0 Kubernetes Pod Deployment
+\f0\b0\fs19 \
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 $ mkdir nginx_kube_example\
+$ cd nginx_kube_example\
+\
+$ vi nginx_pod.yaml\
+apiVersion: v1\
+kind: ReplicationController\
+metadata:\
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+\cf0   name: nginx\
+spec:\
+  replicas: 2\
+  selector:\
+    app: nginx\
+  template:\
+    metadata:\
+      name: nginx\
+      labels:\
+        app: nginx\
+  spec:\
+    containers:\
+    - name: nginx\
+      image: nginx\
+      ports:\
+      - containerPort: 80\
+\
+$ kubectl create -f nginx_pod.yaml\
+$ kubectl get pods\
+$ docker ps\
+\
+$ vi nginx_service.yaml\
+apiVersion: v1\
+kind: Service\
+metadata:\
+  labels:\
+    name: nginxservice\
+  name: nginxservice\
+spec:\
+  ports:\
+    # The port that this service should serve on.\
+    - port: 82\
+  # Label keys and values that must match in order to receive traffic for this service.\
+  selector:\
+    app: nginx\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0   	  type: LoadBalancer\
+\
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+\cf0 $kubectl create -f nginx_service.yaml\
+$ kubectl get services\
+$ kubetl get nodes\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 \
+\
+\
+\
+\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 \ul \ulc0 \
+\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 \ulnone \
+\pard\pardeftab720\li720\ri0\sa120\partightenfactor0
+\cf0 \
+\
+\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 \
+\
+\pard\pardeftab720\li720\ri0\sa50\partightenfactor0
+\cf0 \
+\
+\pard\pardeftab720\ri0\sb60\sa60\partightenfactor0
+\cf0 \
+\
+\
+\
+\
+\
+\
+\
+\
+}
