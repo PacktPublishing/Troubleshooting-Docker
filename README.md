@@ -1,5 +1,5 @@
 # Troubleshooting Docker
-This is the code repository for [Troubleshooting Docker](https://www.packtpub.com/virtualization-and-cloud/troubleshooting-docker?utm_source=github&utm_medium=repository&utm_campaign=9781783552344), published by [Packt Publishing](https://www.packtpub.com/). All the example workflows that are mentioned in the book are present in the package.
+This is the code repository for [Troubleshooting Docker](https://www.packtpub.com/virtualization-and-cloud/troubleshooting-docker?utm_source=github&utm_medium=repository&utm_campaign=9781783552344), published by [Packt](https://www.packtpub.com/). All the example workflows that are mentioned in the book are present in the package.
 
 ## About the Book
 This book will traverse some common best practices to for complex application scenarios where troubleshooting can be successfully employed to provide the repeatable processes and advantages that containers can deliver.
